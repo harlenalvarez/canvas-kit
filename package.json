@@ -1,0 +1,51 @@
+{
+  "name": "@practicaljs/canvas-kit",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "author": {
+    "name": "Harlen Alvarez",
+    "email": "halvarez18@msn.com",
+    "url": "https://github.com/harlenalvarez"
+  },
+  "description": "Set of usefull utilities to use with the canvas api 2d context",
+  "exports": {
+    ".": {
+      "import": "./dist/canvas-kit.js",
+      "require": "./dist/canvas-kit.umd.cjs"
+    }
+  },
+  "main": "dist/canvas-kit.umd.cjs",
+  "module": "dist/canvas-kit.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "url": "https://github.com/harlenalvarez/canvas-kit",
+    "type": "url"
+  },
+  "homepage": "https://github.com/harlenalvarez/canvas-kit",
+  "keywords": [
+    "typescript",
+    "javascript",
+    "canvas api toolkit",
+    "cavnas 2d context"
+  ],
+  "scripts": {
+    "build": "tsc && vite build",
+    "prepack": "json -f package.json -I -e \"delete this.devDependencies; delete this.dependencies\"",
+    "postpublish": "git checkout ./package.json",
+    "test": "vitest run",
+    "test:w": "vitest"
+  },
+  "devDependencies": {
+    "jsdom": "21.1.0",
+    "json": "11.0.0",
+    "typescript": "4.9.5",
+    "vite": "4.1.1",
+    "vite-plugin-dts": "1.7.2",
+    "vitest": "0.28.5"
+  }
+}
