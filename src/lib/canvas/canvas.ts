@@ -203,7 +203,7 @@ export const fromAlpaToHex = (alpa: number) => {
   return decimalValue.toString(16);
 };
 
-export const connectNodeWithCurvedLine = (parent: CanvasNode, child: CanvasNode, ctx: CanvasRenderingContext2D, gap: number = 0, connPoints: 4 | 8 = 4) => {
+export const connectNodesWithCurvedLine = (parent: CanvasNode, child: CanvasNode, ctx: CanvasRenderingContext2D, gap: number = 0, connPoints: 4 | 8 = 4) => {
   const { nodeA, nodeB } = getNodeConnectionPoints(parent, child, gap, connPoints);
   const midPoint = getMidPoint(nodeA.point, nodeB.point);
   ctx.beginPath();
