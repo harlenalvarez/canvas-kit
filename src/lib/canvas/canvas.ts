@@ -248,14 +248,14 @@ export const clamp = (num: number, min: number, max: number) =>
   Math.max(Math.min(num, Math.max(min, max)), Math.min(min, max));
 
 const parseFont = ({ fontWeight, fontSize, fontFamily }: FontStyle) => `${fontWeight} ${fontSize}px ${fontFamily}`;
-const getLineHeight = (metric: TextMetrics) => Math.ceil(metric.fontBoundingBoxAscent + metric.fontBoundingBoxDescent)
-const getTextVerticalPoint = (lines: Record<string, FontStyle>, ctx: CanvasRenderingContext2D, point: Point, maxHeight: number,) => {
+const getLineHeight = (metric: TextMetrics, margin: number = 0) => Math.ceil(metric.actualBoundingBoxAscent + metric.actualBoundingBoxDescent) + margin
+const getTextVerticalPoint = (lines: Record<string, FontStyle>, ctx: CanvasRenderingContext2D, point: Point, maxHeight: number, margin: number = 0) => {
   const linesText = Object.keys(lines);
   const linesHeight: Map<string, number> = new Map();
   const aggAscent = linesText.reduce((accAscent, text) => {
     ctx.font = parseFont(lines[text]);
     const metric = ctx.measureText(text);
-    const h = getLineHeight(metric);
+    const h = getLineHeight(metric, margin);
     linesHeight.set(text, h);
     return accAscent + metric.actualBoundingBoxAscent;
   }, 0);
@@ -282,7 +282,7 @@ export const fillTextContained = (payload: Record<string, FontStyle>, ctx: Canva
   }
   const lines = memoizeLines ?? checkTextStyleContained(payload, ctx, settings);
   const linesText = Object.keys(lines);
-  let { startY, linesHeight } = getTextVerticalPoint(lines, ctx, point, settings.maxHeight);
+  let { startY, linesHeight } = getTextVerticalPoint(lines, ctx, point, settings.maxHeight, settings.margin);
   for (let line of linesText) {
     ctx.font = parseFont(lines[line]);
     ctx.fillText(line, point.x, startY);
@@ -303,7 +303,7 @@ const checkTextStyleContained = (payload: Record<string, FontStyle>, ctx: Canvas
       const zoomFontSize = Math.round(payload[text].fontSize * zoom * reduce);
       ctx.font = parseFont({ ...payload[text], fontSize: zoomFontSize });
       textMetrics = ctx.measureText(text);
-      const lineHeight = getLineHeight(textMetrics);
+      const lineHeight = getLineHeight(textMetrics, settings.margin);
       const breaks = Math.round(textMetrics.width / maxWidth);
       spanBreaks[text] = [breaks, lineHeight, zoomFontSize];
     }

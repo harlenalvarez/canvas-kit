@@ -55,6 +55,7 @@ export type FontStyle = {
 export type FontSettings = {
   maxWidth: number,
   maxHeight: number,
+  margin?: number,
   maxSingleLine?: number,
   zoom?: number
 }
