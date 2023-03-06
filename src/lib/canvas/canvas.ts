@@ -274,7 +274,7 @@ export const fillTextContained = (payload: Record<string, FontStyle>, ctx: Canva
     keys.length === 1 && settings.maxSingleLine
   ) {
     const singleMeasurement = ctx.measureText(keys[0])
-    if (singleMeasurement.width < - settings.maxSingleLine) {
+    if (singleMeasurement.width < settings.maxSingleLine) {
       ctx.font = parseFont(payload[keys[0]]);
       ctx.fillText(keys[0], point.x, point.y);
       return payload;
