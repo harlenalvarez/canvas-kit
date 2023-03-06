@@ -322,6 +322,7 @@ const checkTextStyleContained = (payload: Record<string, FontStyle>, ctx: Canvas
     const words = text.split(' ');
     let write = 0;
     const newTextStyle = { ...payload[text], fontSize: spanBreaks[text][2] };
+    ctx.font = parseFont(newTextStyle);
     for (let read = 0; read < words.length; read++) {
       const newVal = words.slice(write, read + 1).join(' ');
       const length = ctx.measureText(newVal).width;
