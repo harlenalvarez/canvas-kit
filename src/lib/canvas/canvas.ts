@@ -1,4 +1,4 @@
-import { CanvasNode, CanvasNodeConnections, CanvasNodeConnPosition, nodeArcAutoPositionProps, NodeSection, Optional, Point } from '@/types';
+import { CanvasNode, CanvasNodeConnections, CanvasNodeConnPosition, FontSettings, FontStyle, nodeArcAutoPositionProps, NodeSection, Optional, Point } from '@/types';
 
 export const translateAngle = (angle: number) => angle - 90;
 
@@ -244,3 +244,99 @@ export const connectNodesWithStraightLine = (parent: CanvasNode, child: CanvasNo
   ctx.lineTo(child.point.x, child.point.y);
 }
 
+export const clamp = (num: number, min: number, max: number) =>
+  Math.max(Math.min(num, Math.max(min, max)), Math.min(min, max));
+
+const parseFont = ({ fontWeight, fontSize, fontFamily }: FontStyle) => `${fontWeight} ${fontSize}px ${fontFamily}`;
+const getLineHeight = (metric: TextMetrics) => Math.ceil(metric.fontBoundingBoxAscent + metric.fontBoundingBoxDescent)
+const getTextVerticalPoint = (lines: Record<string, FontStyle>, ctx: CanvasRenderingContext2D, point: Point, maxHeight: number,) => {
+  const linesText = Object.keys(lines);
+  const linesHeight: Map<string, number> = new Map();
+  const aggAscent = linesText.reduce((accAscent, text) => {
+    ctx.font = parseFont(lines[text]);
+    const metric = ctx.measureText(text);
+    const h = getLineHeight(metric);
+    linesHeight.set(text, h);
+    return accAscent + metric.actualBoundingBoxAscent;
+  }, 0);
+  const maxStartY = Math.round(point.y - maxHeight / 2);
+  const middleYPoint = Math.round(point.y - aggAscent);
+  return { startY: clamp(middleYPoint, point.y, maxStartY), linesHeight };
+}
+/**
+ * Pass in a value and the font style and will render the text around a box
+ * @param values 
+ * @param ctx 
+ */
+export const fillTextContained = (payload: Record<string, FontStyle>, ctx: CanvasRenderingContext2D, settings: FontSettings, point: Point, memoizeLines?: Record<string, FontStyle>) => {
+  const keys = Object.keys(payload);
+  if (
+    keys.length === 1 && settings.maxSingleLine
+  ) {
+    const singleMeasurement = ctx.measureText(keys[0])
+    if (singleMeasurement.width < - settings.maxSingleLine) {
+      ctx.font = parseFont(payload[keys[0]]);
+      ctx.fillText(keys[0], point.x, point.y);
+      return payload;
+    }
+  }
+  const lines = memoizeLines ?? checkTextStyleContained(payload, ctx, settings);
+  const linesText = Object.keys(lines);
+  let { startY, linesHeight } = getTextVerticalPoint(lines, ctx, point, settings.maxHeight);
+  for (let line of linesText) {
+    ctx.font = parseFont(lines[line]);
+    ctx.fillText(line, point.x, startY);
+    startY += linesHeight.get(line) ?? 0;
+  }
+  return lines;
+}
+
+const checkTextStyleContained = (payload: Record<string, FontStyle>, ctx: CanvasRenderingContext2D, settings: FontSettings) => {
+  let spanBreaks: Record<string, [number, number, number]> = {};
+  let reduce = 1;
+  let textMetrics: TextMetrics;
+  let textValues = Object.keys(payload);
+  let aggHeight = 0;
+  const { maxHeight, maxWidth, zoom = 1 } = settings
+  do {
+    for (let text of textValues) {
+      const zoomFontSize = Math.round(payload[text].fontSize * zoom * reduce);
+      ctx.font = parseFont({ ...payload[text], fontSize: zoomFontSize });
+      textMetrics = ctx.measureText(text);
+      const lineHeight = getLineHeight(textMetrics);
+      const breaks = Math.round(textMetrics.width / maxWidth);
+      spanBreaks[text] = [breaks, lineHeight, zoomFontSize];
+    }
+    aggHeight = Object.values(spanBreaks).reduce((acc, current) => {
+      const height = current[0] * current[1];
+      return acc + height;
+    }, 0);
+    if (aggHeight >= maxHeight) {
+      reduce *= .95;
+    }
+  } while (aggHeight >= maxHeight);
+
+  let allStyledLines: Record<string, FontStyle> = {};
+  for (const text of textValues) {
+    let lines = [];
+    const words = text.split(' ');
+    let write = 0;
+    const newTextStyle = { ...payload[text], fontSize: spanBreaks[text][2] };
+    for (let read = 0; read < words.length; read++) {
+      const newVal = words.slice(write, read + 1).join(' ');
+      const length = ctx.measureText(newVal).width;
+      if (length >= maxWidth) {
+        lines.push(words.slice(write, read).join(' '));
+        write = read;
+      }
+    }
+    if (write < words.length) {
+      lines.push(words.slice(write, words.length).join(' '));
+    }
+    for (const line of lines) {
+      allStyledLines[line] = { ...newTextStyle }
+    }
+  }
+
+  return allStyledLines;
+}

@@ -46,3 +46,15 @@ export type nodeArcAutoPositionProps = {
   section: NodeSection
 };
 
+export type FontStyle = {
+  fontWeight: number,
+  fontFamily: string,
+  fontSize: number
+}
+
+export type FontSettings = {
+  maxWidth: number,
+  maxHeight: number,
+  maxSingleLine?: number,
+  zoom?: number
+}

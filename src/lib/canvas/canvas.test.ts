@@ -1,7 +1,7 @@
 import { CanvasNodeConnPosition } from '@/types';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { getCanvasPoint, getDistance, getMidPoint, getNodeConnectionPoints, getSlope } from './canvas';
+import { clamp, getCanvasPoint, getDistance, getMidPoint, getNodeConnectionPoints, getSlope } from './canvas';
 
 describe('Cavnas Utilities', () => {
   test('Should return null if no canvas passed', () => {
@@ -93,4 +93,21 @@ describe('Cavnas Utilities', () => {
     const result1 = getSlope({ x: 0, y: 0 }, { x: 0, y: 2 });
     expect(result1).toBe(0);
   });
+
+  describe('Clmap', () => {
+    test('Should clamp to min', () => {
+      const result = clamp(-1, 0.25, 4);
+      expect(result).toBe(.25);
+    });
+
+    test('Should clamp to max', () => {
+      const result = clamp(5, 0.25, 4);
+      expect(result).toBe(4);
+    })
+
+    test('Should return number in between clamp values', () => {
+      const result = clamp(3, 0, 4);
+      expect(result).toBe(3);
+    })
+  })
 });
