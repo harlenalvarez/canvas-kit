@@ -253,7 +253,7 @@ const getTextVerticalPoint = (lines: Map<string, FontStyle>, ctx: CanvasRenderin
   const linesText = Array.from(lines.keys());
   const linesHeight: Map<string, number> = new Map();
   const aggAscent = linesText.reduce((accAscent, text) => {
-    ctx.font = parseFont(lines.get(text));
+    ctx.font = parseFont(lines.get(text)!);
     const metric = ctx.measureText(text);
     const h = getLineHeight(metric, margin);
     linesHeight.set(text, h);
@@ -274,10 +274,10 @@ export const fillTextContained = (payload: Map<string, FontStyle>, ctx: CanvasRe
   if (
     keys.length === 1 && settings.maxSingleLine
   ) {
-    ctx.font = parseFont(payload.get(keys[0]))
+    ctx.font = parseFont(payload.get(keys[0])!)
     const singleMeasurement = ctx.measureText(keys[0])
     if (singleMeasurement.width < settings.maxSingleLine) {
-      ctx.font = parseFont(payload.get(keys[0]));
+      ctx.font = parseFont(payload.get(keys[0])!);
       ctx.fillText(keys[0], point.x, point.y);
       return payload;
     }
@@ -286,7 +286,7 @@ export const fillTextContained = (payload: Map<string, FontStyle>, ctx: CanvasRe
   const linesText = Array.from(lines.keys());
   let { startY, linesHeight } = getTextVerticalPoint(lines, ctx, point, settings.maxHeight, settings.margin);
   for (let line of linesText) {
-    ctx.font = parseFont(lines.get(line));
+    ctx.font = parseFont(lines.get(line)!);
     ctx.fillText(line, point.x, startY);
     startY += linesHeight.get(line) ?? 0;
   }
@@ -335,9 +335,9 @@ const checkTextStyleContained = (payload: Map<string, FontStyle>, ctx: CanvasRen
   const { maxHeight, maxWidth, zoom = 1 } = settings
   do {
     for (let text of textValues) {
-      const zoomFontSize = Math.round(payload.get(text).fontSize * zoom * reduce);
+      const zoomFontSize = Math.round(payload.get(text)!.fontSize * zoom * reduce);
       ratioMargin *= reduce
-      ctx.font = parseFont({ ...payload.get(text), fontSize: zoomFontSize });
+      ctx.font = parseFont({ ...payload.get(text)!, fontSize: zoomFontSize });
       textMetrics = ctx.measureText(text);
       const lineHeight = getLineHeight(textMetrics, ratioMargin);
       const breaks = Math.round(textMetrics.width / maxWidth);
@@ -357,7 +357,7 @@ const checkTextStyleContained = (payload: Map<string, FontStyle>, ctx: CanvasRen
   // check if any one word is larger then the max width requiring to reduce the font
   const [longestWord, longestWordText, longestWordStyle] = getLongestWord(Object.fromEntries(payload));
   let longestWordMetric: TextMetrics;
-  let zoomFontSize = spanBreaks.get(longestWordText)[2]
+  let zoomFontSize = spanBreaks.get(longestWordText)![2]
   do {
     zoomFontSize = Math.round(longestWordStyle.fontSize * zoom * reduce);
     ctx.font = parseFont({ ...longestWordStyle, fontSize: zoomFontSize });
@@ -370,7 +370,7 @@ const checkTextStyleContained = (payload: Map<string, FontStyle>, ctx: CanvasRen
 
   if (reduceAfterHight !== reduce) {
     for (let text of textValues) {
-      spanBreaks.get(text)[2] = Math.round(payload.get(text).fontSize * zoom * reduce)
+      spanBreaks.get(text)![2] = Math.round(payload.get(text)!.fontSize * zoom * reduce)
     }
   }
   let debug = false
@@ -379,7 +379,7 @@ const checkTextStyleContained = (payload: Map<string, FontStyle>, ctx: CanvasRen
     let lines = [];
     const words = text.split(' ');
     let write = 0;
-    const newTextStyle = { ...payload.get(text), fontSize: spanBreaks.get(text)[2] };
+    const newTextStyle = { ...payload.get(text)!, fontSize: spanBreaks.get(text)![2] };
     ctx.font = parseFont(newTextStyle);
     for (let read = 0; read < words.length; read++) {
       const newVal = words.slice(write, read + 1).join(' ');
