@@ -1,7 +1,7 @@
-import { CanvasNodeConnPosition } from '@/types';
+import { CanvasNodeConnPosition, FontStyle } from '@/types';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { clamp, getCanvasPoint, getDistance, getMidPoint, getNodeConnectionPoints, getSlope } from './canvas';
+import { clamp, getCanvasPoint, getDistance, getLongestWord, getMidPoint, getNodeConnectionPoints, getSlope } from './canvas';
 
 describe('Cavnas Utilities', () => {
   test('Should return null if no canvas passed', () => {
@@ -94,7 +94,31 @@ describe('Cavnas Utilities', () => {
     expect(result1).toBe(0);
   });
 
-  describe('Clmap', () => {
+  test('Should return longest word', () => {
+    let lines: Record<string, FontStyle> = {
+      'This is a test': { fontWeight: 400, fontFamily: 'test1', fontSize: 10 },
+      'The longest word should be the one with more characters': { fontWeight: 100, fontFamily: 'test2', fontSize: 10 },
+    };
+
+    const [word, text, style] = getLongestWord(lines);
+    expect(word).toEqual('characters');
+    expect(text).toEqual('The longest word should be the one with more characters')
+    expect(style).toMatchObject({ fontWeight: 100, fontFamily: 'test2', fontSize: 10 });
+  })
+
+  test('Should return longest word begining', () => {
+    let lines: Record<string, FontStyle> = {
+      'SuperLongWord This is a test': { fontWeight: 400, fontFamily: 'test1', fontSize: 10 },
+      'The longest word should be the one with more characters': { fontWeight: 100, fontFamily: 'test2', fontSize: 10 },
+    };
+
+    const [word, text, style] = getLongestWord(lines);
+    expect(word).toEqual('SuperLongWord');
+    expect(text).toEqual('SuperLongWord This is a test')
+    expect(style).toMatchObject({ fontWeight: 400, fontFamily: 'test1', fontSize: 10 })
+  })
+
+  describe('Clamp', () => {
     test('Should clamp to min', () => {
       const result = clamp(-1, 0.25, 4);
       expect(result).toBe(.25);

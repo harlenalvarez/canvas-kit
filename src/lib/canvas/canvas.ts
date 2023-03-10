@@ -291,19 +291,53 @@ export const fillTextContained = (payload: Record<string, FontStyle>, ctx: Canva
   return lines;
 }
 
+export const getLongestWord = (payload: Record<string, FontStyle>): [string, string, FontStyle] => {
+  const values = Object.keys(payload)
+  let maxLength = 0;
+  let start = 0;
+  let maxWord = '';
+  let style = {} as FontStyle;
+  let text = ''
+  for (let x = 0; x < values.length; x++) {
+    start = 0;
+    let end = 0;
+    for (; end < values[x].length; end++) {
+      if (start === end) continue;
+      if (values[x][end] === ' ') {
+        if (end - start > maxLength) {
+          maxLength = end - start;
+          maxWord = values[x].slice(start, end);
+          style = payload[values[x]];
+          text = values[x]
+        }
+        start = end + 1;
+      }
+    }
+    if (start < values[x].length && end - start > maxLength) {
+      maxLength = end - start;
+      maxWord = values[x].slice(start, end);
+      style = payload[values[x]];
+      text = values[x];
+    }
+  }
+  return [maxWord, text, style]
+}
+
 const checkTextStyleContained = (payload: Record<string, FontStyle>, ctx: CanvasRenderingContext2D, settings: FontSettings) => {
   let spanBreaks: Record<string, [number, number, number]> = {};
   let reduce = 1;
   let textMetrics: TextMetrics;
   let textValues = Object.keys(payload);
   let aggHeight = 0;
+  let ratioMargin = settings.margin ?? 0
   const { maxHeight, maxWidth, zoom = 1 } = settings
   do {
     for (let text of textValues) {
       const zoomFontSize = Math.round(payload[text].fontSize * zoom * reduce);
+      ratioMargin *= reduce
       ctx.font = parseFont({ ...payload[text], fontSize: zoomFontSize });
       textMetrics = ctx.measureText(text);
-      const lineHeight = getLineHeight(textMetrics, settings.margin);
+      const lineHeight = getLineHeight(textMetrics, ratioMargin);
       const breaks = Math.round(textMetrics.width / maxWidth);
       spanBreaks[text] = [breaks, lineHeight, zoomFontSize];
     }
@@ -315,6 +349,22 @@ const checkTextStyleContained = (payload: Record<string, FontStyle>, ctx: Canvas
       reduce *= .95;
     }
   } while (aggHeight >= maxHeight);
+
+  // check if any one word is larger then the max width requiring to reduce the font
+  const [longestWord, longestWordText, longestWordStyle] = getLongestWord(payload);
+  let longestWordMetric: TextMetrics;
+  let zoomFontSize = spanBreaks[longestWordText][2]
+  do {
+    zoomFontSize = Math.round(longestWordStyle.fontSize * zoom * reduce);
+    ctx.font = parseFont({ ...longestWordStyle, fontSize: zoomFontSize });
+    ctx.font = parseFont(longestWordStyle);
+    longestWordMetric = ctx.measureText(longestWord);
+    if (longestWordMetric.width > maxWidth) {
+      reduce *= .95;
+    }
+  }
+  while (longestWordMetric.width > maxWidth)
+  spanBreaks[longestWordText][2] = zoomFontSize;
 
   let allStyledLines: Record<string, FontStyle> = {};
   for (const text of textValues) {
@@ -338,6 +388,7 @@ const checkTextStyleContained = (payload: Record<string, FontStyle>, ctx: Canvas
       allStyledLines[line] = { ...newTextStyle }
     }
   }
-
+  if (settings.margin !== null || settings.margin !== undefined)
+    settings.margin = ratioMargin
   return allStyledLines;
 }
