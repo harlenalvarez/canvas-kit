@@ -188,6 +188,6 @@ Imagine you have this color #d3d3d3 and you want to add a transparency of 0.7 as
 
 ```ts
 
-const alphaHex = fromAlpaToHex(0.7);
+const alphaHex = fromAlphaToHex(0.7);
 const hexColor = `#d3d3d3${alphaHex}`;
 ```
