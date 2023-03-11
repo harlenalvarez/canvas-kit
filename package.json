@@ -34,7 +34,7 @@
   ],
   "scripts": {
     "build": "tsc && vite build",
-    "prepack": "json -f package.json -I -e \"delete this.devDependencies; delete this.dependencies\"",
+    "prepack": "npm run build && json -f package.json -I -e \"delete this.devDependencies; delete this.dependencies\"",
     "postpublish": "git checkout ./package.json",
     "test": "vitest run",
     "test:w": "vitest"
